@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/drugprofile/drugprofile/internal/models"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -19,15 +20,72 @@ func NewRepository(dbPath string) (*Repository, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&models.Sustancia{}, &models.Perfil{})
+	err = db.AutoMigrate(&models.Sustancia{}, &models.Perfil{}, &models.User{})
 	if err != nil {
 		return nil, err
 	}
 
 	repo := &Repository{db: db}
 	repo.seedSustancias()
+	repo.seedUsers()
 
 	return repo, nil
+}
+
+func (r *Repository) seedUsers() {
+	var count int64
+	r.db.Model(&models.User{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	// Crear admin:admin
+	hashedAdmin, _ := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+	r.db.Create(&models.User{
+		DNI:                 "admin",
+		Password:            string(hashedAdmin),
+		IsAdmin:             true,
+		NeedsPasswordChange: true,
+	})
+
+	// Crear user:user
+	hashedUser, _ := bcrypt.GenerateFromPassword([]byte("user"), bcrypt.DefaultCost)
+	r.db.Create(&models.User{
+		DNI:                 "user",
+		Password:            string(hashedUser),
+		IsAdmin:             false,
+		NeedsPasswordChange: true,
+	})
+}
+
+func (r *Repository) GetUserByDNI(dni string) (*models.User, error) {
+	var u models.User
+	err := r.db.First(&u, "dni = ?", dni).Error
+	return &u, err
+}
+
+func (r *Repository) GetUserByID(id string) (*models.User, error) {
+	var u models.User
+	err := r.db.First(&u, "id = ?", id).Error
+	return &u, err
+}
+
+func (r *Repository) CreateUser(u *models.User) error {
+	return r.db.Create(u).Error
+}
+
+func (r *Repository) DeleteUser(id string) error {
+	return r.db.Delete(&models.User{}, "id = ?", id).Error
+}
+
+func (r *Repository) GetAllUsers() ([]models.User, error) {
+	var users []models.User
+	err := r.db.Order("created_at desc").Find(&users).Error
+	return users, err
+}
+
+func (r *Repository) UpdateUser(u *models.User) error {
+	return r.db.Save(u).Error
 }
 
 func (r *Repository) seedSustancias() {

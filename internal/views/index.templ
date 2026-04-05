@@ -62,11 +62,15 @@ templ Layout(title string) {
 						<img src="/static/logo.svg" alt="Logo" class="w-full h-full rounded-lg" />
 					</div>
 					<h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
-						Drogodependencia
+						<a href="/">Drogodependencia</a>
 					</h1>
 				</div>
-				<div class="hidden md:flex items-center space-x-4">
-					<span class="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded-full border border-green-500/20 uppercase tracking-wider">Junta de Andalucía</span>
+				<div class="flex items-center space-x-4">
+					<span class="hidden md:inline-block px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded-full border border-green-500/20 uppercase tracking-wider">Junta de Andalucía</span>
+					<div id="user-menu" class="flex items-center space-x-2">
+						<!-- El contenido se inyectará o será estático si pasamos contexto -->
+						<a href="/logout" class="text-xs font-bold text-red-400 hover:text-red-300 uppercase tracking-widest border border-red-400/20 px-3 py-1 rounded-lg transition-all">Cerrar Sesión</a>
+					</div>
 				</div>
 			</div>
 		</nav>
@@ -82,13 +86,23 @@ templ Layout(title string) {
 	</html>
 }
 
-templ Dashboard(title string, content templ.Component) {
+templ Dashboard(title string, content templ.Component, isAdmin bool) {
 	@Layout(title) {
 		<div class="space-y-12 animate-in fade-in duration-700">
 			<!-- Header Principal -->
-			<div class="text-center space-y-4">
-				<h2 class="text-4xl font-black text-white tracking-tight">Gestión de Expedientes Clínicos</h2>
-				<p class="text-dark-400 max-w-2xl mx-auto">Seleccione una acción para comenzar el procesamiento de información del paciente.</p>
+			<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+				<div class="text-center md:text-left space-y-2">
+					<h2 class="text-4xl font-black text-white tracking-tight">Gestión de Expedientes Clínicos</h2>
+					<p class="text-dark-400 max-w-xl">Seleccione una acción para comenzar el procesamiento de información del paciente.</p>
+				</div>
+				if isAdmin {
+					<div class="flex space-x-2">
+						<a href="/admin" class="bg-dark-800 hover:bg-dark-700 text-dark-100 px-4 py-2.5 rounded-xl font-bold border border-dark-700 transition-all flex items-center space-x-2">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+							<span>Panel Control</span>
+						</a>
+					</div>
+				}
 			</div>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -149,8 +163,192 @@ templ Dashboard(title string, content templ.Component) {
 	}
 }
 
-templ Index(initialSustancias []models.Sustancia) {
-	@Dashboard("Panel de Gestión Clínica", nil)
+templ Index(initialSustancias []models.Sustancia, isAdmin bool) {
+	@Dashboard("Panel de Gestión Clínica", nil, isAdmin)
+}
+
+templ Login(errorMsg string) {
+	<!DOCTYPE html>
+	<html lang="es" class="dark">
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Login - Drogodependencia</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body class="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-4">
+		<div class="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-2xl space-y-8 animate-in fade-in zoom-in duration-500">
+			<div class="text-center space-y-2">
+				<div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center text-blue-400 mx-auto mb-4 border border-blue-500/20">
+					<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+				</div>
+				<h2 class="text-3xl font-black tracking-tight">Acceso Restringido</h2>
+				<p class="text-neutral-400 text-sm">Identifíquese para gestionar expedientes clínicos.</p>
+			</div>
+
+			if errorMsg != "" {
+				<div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-400 text-sm font-bold text-center">
+					{ errorMsg }
+				</div>
+			}
+
+			<form action="/login" method="POST" class="space-y-6">
+				<div class="space-y-1">
+					<label class="text-xs font-bold text-neutral-500 uppercase tracking-widest ml-1">Documento (DNI)</label>
+					<input type="text" name="dni" required placeholder="admin / user" 
+						class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all" />
+				</div>
+				<div class="space-y-1">
+					<label class="text-xs font-bold text-neutral-500 uppercase tracking-widest ml-1">Contraseña</label>
+					<input type="password" name="password" required placeholder="••••••••"
+						class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all" />
+				</div>
+				<button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-black text-lg transition-all transform hover:scale-[1.02] shadow-xl shadow-blue-900/20">
+					INICIAR SESIÓN
+				</button>
+			</form>
+			
+			<div class="text-center">
+				<p class="text-neutral-600 text-[10px] uppercase tracking-tighter">Sistema de Gestión Hospitalaria v2.0 - Junta de Andalucía</p>
+			</div>
+		</div>
+	</body>
+	</html>
+}
+
+templ PasswordChange(errorMsg string) {
+	<!DOCTYPE html>
+	<html lang="es" class="dark">
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Cambio Obligatorio de Contraseña</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body class="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-4">
+		<div class="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-2xl space-y-8">
+			<div class="text-center space-y-2">
+				<div class="w-16 h-16 bg-amber-600/20 rounded-2xl flex items-center justify-center text-amber-400 mx-auto mb-4 border border-amber-500/20">
+					<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+				</div>
+				<h2 class="text-2xl font-black tracking-tight text-amber-400">Primer Inicio de Sesión</h2>
+				<p class="text-neutral-400 text-sm">Por seguridad, debe establecer una nueva contraseña antes de continuar.</p>
+			</div>
+
+			if errorMsg != "" {
+				<div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-400 text-sm font-bold text-center">
+					{ errorMsg }
+				</div>
+			}
+
+			<form action="/cambiar-password" method="POST" class="space-y-6">
+				<div class="space-y-1">
+					<label class="text-xs font-bold text-neutral-500 uppercase ml-1">Nueva Contraseña</label>
+					<input type="password" name="password" required 
+						class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-amber-500/50 outline-none transition-all" />
+				</div>
+				<div class="space-y-1">
+					<label class="text-xs font-bold text-neutral-500 uppercase ml-1">Confirmar Contraseña</label>
+					<input type="password" name="confirm_password" required
+						class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-amber-500/50 outline-none transition-all" />
+				</div>
+				<button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-amber-900/20 transition-all">
+					ACTUALIZAR Y CONTINUAR
+				</button>
+			</form>
+		</div>
+	</body>
+	</html>
+}
+
+templ AdminPanel(users []models.User, msg string) {
+	@Layout("Panel de Administración") {
+		<div class="space-y-8 animate-in fade-in duration-500">
+			<div class="flex items-center justify-between border-b border-neutral-800 pb-6">
+				<div>
+					<h2 class="text-3xl font-black text-white tracking-tight italic uppercase">Gestión de Usuarios</h2>
+					<p class="text-neutral-500 text-sm mt-1">Alta y baja de personal con acceso al sistema.</p>
+				</div>
+				<a href="/" class="text-neutral-400 hover:text-white text-sm flex items-center space-x-2 transition-colors">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+					<span>Volver al Panel</span>
+				</a>
+			</div>
+
+			if msg != "" {
+				<div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl text-blue-400 text-sm font-bold text-center">
+					{ msg }
+				</div>
+			}
+
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+				<!-- Formulario Alta -->
+				<div class="lg:col-span-1">
+					<div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 space-y-6">
+						<h3 class="text-lg font-bold text-white flex items-center space-x-2">
+							<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+							<span>Nuevo Usuario</span>
+						</h3>
+						<form action="/admin/usuarios" method="POST" class="space-y-4">
+							<div class="space-y-1">
+								<label class="text-[10px] font-bold text-neutral-500 uppercase ml-1">DNI del Personal</label>
+								<input type="text" name="dni" required oninput="this.value = this.value.toUpperCase()"
+									class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm focus:border-emerald-500 outline-none transition-all" />
+							</div>
+							<div class="flex items-center space-x-3 p-3 bg-neutral-950/50 rounded-xl border border-neutral-800">
+								<input type="checkbox" name="is_admin" id="is_admin" class="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-emerald-600 focus:ring-emerald-500/50" />
+								<label for="is_admin" class="text-xs font-bold text-neutral-400 cursor-pointer">Otorgar permisos de administrador</label>
+							</div>
+							<button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-900/20">
+								REGISTRAR PERSONAL
+							</button>
+							<p class="text-[10px] text-neutral-600 text-center">La contraseña inicial será el propio DNI.</p>
+						</form>
+					</div>
+				</div>
+
+				<!-- Lista Usuarios -->
+				<div class="lg:col-span-2">
+					<div class="bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-xl">
+						<table class="w-full text-left">
+							<thead class="bg-neutral-800/50 text-neutral-400 text-[10px] uppercase tracking-widest">
+								<tr>
+									<th class="px-6 py-4 font-bold">Identificación</th>
+									<th class="px-6 py-4 font-bold">Rol</th>
+									<th class="px-6 py-4 font-bold text-right">Acciones</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-neutral-800">
+								for _, u := range users {
+									<tr class="hover:bg-neutral-800/20 transition-colors">
+										<td class="px-6 py-4">
+											<div class="flex items-center space-x-3">
+												<div class="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center text-neutral-500 font-bold text-xs uppercase">
+													{ u.DNI[:2] }
+												</div>
+												<span class="text-sm font-medium text-white">{ u.DNI }</span>
+											</div>
+										</td>
+										<td class="px-6 py-4">
+											if u.IsAdmin {
+												<span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-black rounded border border-blue-500/20 uppercase tracking-tighter">Administrador</span>
+											} else {
+												<span class="px-2 py-0.5 bg-neutral-500/10 text-neutral-400 text-[10px] font-black rounded border border-neutral-500/20 uppercase tracking-tighter">Personal</span>
+											}
+										</td>
+										<td class="px-6 py-4 text-right">
+											<button hx-delete={ "/admin/usuarios/" + u.ID } hx-confirm="¿Seguro que desea eliminar este usuario?" hx-target="closest tr" hx-swap="outerHTML"
+												class="p-2 text-neutral-600 hover:text-red-400 transition-colors">
+												<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+											</button>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
 }
 
 templ PatientSearchResults(p *models.Perfil, message string) {

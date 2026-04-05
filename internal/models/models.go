@@ -73,3 +73,21 @@ func (p *Perfil) BeforeCreate(tx *gorm.DB) (err error) {
 	}
 	return
 }
+
+// User representa un usuario del sistema (admin o personal)
+type User struct {
+	ID                  string `gorm:"primaryKey" json:"id"`
+	DNI                 string `gorm:"uniqueIndex;not null" json:"dni"`
+	Password            string `gorm:"not null" json:"-"`
+	IsAdmin             bool   `gorm:"default:false" json:"is_admin"`
+	NeedsPasswordChange bool   `gorm:"default:true" json:"needs_password_change"`
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	if u.ID == "" {
+		u.ID = uuid.New().String()
+	}
+	return
+}
