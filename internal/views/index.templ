@@ -1,0 +1,663 @@
+package views
+
+import (
+    "github.com/drugprofile/drugprofile/internal/models"
+	"fmt"
+)
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="es" class="dark">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>{ title }</title>
+		<script src="https://unpkg.com/htmx.org@2.0.0"></script>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				darkMode: 'class',
+				theme: {
+					extend: {
+						colors: {
+							dark: {
+								50: '#f8fafc',
+								100: '#f1f5f9',
+								200: '#e2e8f0',
+								300: '#cbd5e1',
+								400: '#94a3b8',
+								500: '#64748b',
+								600: '#475569',
+								700: '#334155',
+								800: '#1e293b',
+								900: '#0f172a',
+								950: '#020617',
+							}
+						}
+					}
+				}
+			}
+		</script>
+		<style>
+			.custom-scrollbar::-webkit-scrollbar {
+				width: 6px;
+			}
+			.custom-scrollbar::-webkit-scrollbar-track {
+				background: #1e293b;
+			}
+			.custom-scrollbar::-webkit-scrollbar-thumb {
+				background: #475569;
+				border-radius: 10px;
+			}
+			.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+				background: #64748b;
+			}
+		</style>
+	</head>
+	<body class="bg-dark-950 text-dark-200 min-h-screen font-sans selection:bg-blue-500/30">
+		<nav class="bg-dark-900/80 backdrop-blur-md border-b border-dark-800 sticky top-0 z-50 p-4">
+			<div class="container mx-auto flex justify-between items-center">
+				<div class="flex items-center space-x-3">
+					<div class="w-10 h-10 shadow-lg shadow-blue-900/20">
+						<img src="/static/logo.svg" alt="Logo" class="w-full h-full rounded-lg" />
+					</div>
+					<h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+						Drogodependencia
+					</h1>
+				</div>
+				<div class="hidden md:flex items-center space-x-4">
+					<span class="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded-full border border-green-500/20 uppercase tracking-wider">Junta de Andalucía</span>
+				</div>
+			</div>
+		</nav>
+		
+		<main class="container mx-auto py-8 px-4 max-w-6xl">
+			{ children... }
+		</main>
+
+		<footer class="mt-20 border-t border-dark-800 py-8 text-center text-dark-500 text-sm">
+			<p>&copy; 2024 Gestión de Drogodependencia - Gestión Hospitalaria Avanzada</p>
+		</footer>
+	</body>
+	</html>
+}
+
+templ Dashboard(title string, content templ.Component) {
+	@Layout(title) {
+		<div class="space-y-12 animate-in fade-in duration-700">
+			<!-- Header Principal -->
+			<div class="text-center space-y-4">
+				<h2 class="text-4xl font-black text-white tracking-tight">Gestión de Expedientes Clínicos</h2>
+				<p class="text-dark-400 max-w-2xl mx-auto">Seleccione una acción para comenzar el procesamiento de información del paciente.</p>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+				<!-- Apartado 1: Búsqueda y Nuevos Informes -->
+				<div class="bg-dark-900 border border-dark-800 rounded-3xl p-8 space-y-6 shadow-2xl hover:border-blue-500/30 transition-all group">
+					<div class="flex items-center space-x-4">
+						<div class="w-12 h-12 bg-blue-600/20 rounded-2xl flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+						</div>
+						<div>
+							<h3 class="text-xl font-bold text-white">Pacientes Existentes</h3>
+							<p class="text-dark-400 text-sm">Buscar por DNI o Pasaporte para generar nuevos informes.</p>
+						</div>
+					</div>
+					
+					<div class="space-y-4">
+						<div class="relative">
+							<input type="text" name="dni_search" id="dni_search" placeholder="DNI (12345678A) o Pasaporte (AAA123456)..." 
+								oninput="this.value = this.value.toUpperCase()"
+								class="w-full bg-dark-950 border border-dark-700 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" />
+							<button hx-post="/paciente/search" hx-include="#dni_search" hx-target="#search-results"
+								class="absolute right-2 top-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold transition-all">
+								Buscar
+							</button>
+						</div>
+						<div id="search-results" class="min-h-[100px] border border-dark-800 border-dashed rounded-xl flex items-center justify-center text-dark-500 text-sm italic p-4">
+							Los resultados aparecerán aquí...
+						</div>
+					</div>
+				</div>
+
+				<!-- Apartado 2: Registro Inicial -->
+				<div class="bg-dark-900 border border-dark-800 rounded-3xl p-8 space-y-6 shadow-2xl hover:border-emerald-500/30 transition-all group">
+					<div class="flex items-center space-x-4">
+						<div class="w-12 h-12 bg-emerald-600/20 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+						</div>
+						<div>
+							<h3 class="text-xl font-bold text-white">Nuevo Registro</h3>
+							<p class="text-dark-400 text-sm">Alta de paciente y primer informe clínico.</p>
+						</div>
+					</div>
+					<div class="flex flex-col h-full justify-center pb-4">
+						<button hx-get="/perfil/nuevo" hx-target="#main-content" hx-push-url="true"
+							class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-black text-lg shadow-lg shadow-emerald-900/20 transition-all transform hover:scale-[1.02]">
+							REGISTRAR NUEVO PACIENTE
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<div id="main-content" class="pt-8">
+				if content != nil {
+					@content
+				}
+			</div>
+		</div>
+	}
+}
+
+templ Index(initialSustancias []models.Sustancia) {
+	@Dashboard("Panel de Gestión Clínica", nil)
+}
+
+templ PatientSearchResults(p *models.Perfil, message string) {
+	if p != nil {
+		<div class="w-full flex items-center justify-between bg-dark-950 p-4 rounded-xl border border-dark-700 animate-in slide-in-from-top-2">
+			<div class="flex items-center space-x-4">
+				<div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400">
+					<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+				</div>
+				<div>
+					<p class="text-white font-bold">{ p.NombreCompleto }</p>
+					<p class="text-dark-500 text-xs">DNI: { p.DNI }</p>
+				</div>
+			</div>
+			<button hx-get={ string(templ.URL(fmt.Sprintf("/perfil/nuevo/%s", p.DNI))) } hx-target="#main-content" hx-push-url="true"
+				class="bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white px-4 py-2 rounded-lg text-sm font-bold border border-blue-500/20 transition-all">
+				Nuevo Informe
+			</button>
+		</div>
+	} else if message != "" {
+		<div class="text-red-400 text-sm flex items-center space-x-2">
+			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+			<span>{ message }</span>
+		</div>
+	}
+}
+
+templ RegistrationForm(sustancias []models.Sustancia, p *models.Perfil) {
+	<div class="space-y-8 animate-in fade-in duration-700">
+		<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-dark-800 pb-6">
+			<div>
+				<h2 class="text-3xl font-extrabold text-white tracking-tight">
+					if p != nil {
+						Nuevo Informe: { p.NombreCompleto }
+					} else {
+						Registro de Nuevo Paciente
+					}
+				</h2>
+				<p class="text-dark-400 mt-1">Complete todos los campos para generar el expediente clínico detallado.</p>
+			</div>
+			<div class="text-dark-500 text-sm italic">
+				Campos marcados con <span class="text-blue-500">*</span> son obligatorios
+			</div>
+		</div>
+
+		<form hx-post="/perfil" hx-target="#result" hx-swap="innerHTML" class="space-y-8">
+			
+			<!-- 1. Datos Personales -->
+			<section class="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+				<div class="bg-dark-800/50 px-6 py-4 border-b border-dark-800 flex items-center space-x-3">
+					<svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+					<h3 class="font-bold text-dark-100 uppercase tracking-wider text-sm">1. Información de Identidad</h3>
+				</div>
+				<div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Nombre Completo <span class="text-blue-500">*</span></label>
+						<input type="text" name="nombre_completo" required placeholder="Nombre y apellidos" 
+							value={ getValue(p, "NombreCompleto") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder:text-dark-600" />
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">DNI / Pasaporte</label>
+						<input type="text" name="dni" placeholder="00000000X / AAA123456"
+							value={ getValue(p, "DNI") }
+							pattern="([0-9]{8}[A-Z])|([A-Z]{3}[0-9]{6})"
+							title="DNI: 8 números y 1 letra (12345678A) | Pasaporte: 3 letras y 6 números (AAA123456)"
+							oninput="this.value = this.value.toUpperCase()"
+							maxlength="9"
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder:text-dark-600" />
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Fecha de Nacimiento</label>
+						<input type="text" name="fecha_nacimiento" placeholder="dd/mm/aaaa"
+							value={ getDateValue(p, "FechaNacimiento") }
+							pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}"
+							title="Formato requerido: dd/mm/aaaa"
+							oninput="this.value = this.value.replace(/[^0-9/]/g, '').replace(/^(\d{2})(\d{2})/, '$1/$2/').replace(/^(\d{2}\/\d{2})(\d{4})/, '$1/$2')"
+							maxlength="10"
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all" />
+					</div>
+					<div class="md:col-span-2 space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Dirección de Residencia</label>
+						<input type="text" name="direccion" placeholder="Calle, número, piso, ciudad..."
+							value={ getValue(p, "Direccion") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder:text-dark-600" />
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Teléfono de Contacto</label>
+						<input type="tel" name="telefono" placeholder="+34 600 000 000"
+							value={ getValue(p, "Telefono") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder:text-dark-600" />
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Correo Electrónico</label>
+						<input type="email" name="email" placeholder="paciente@ejemplo.com"
+							value={ getValue(p, "Email") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder:text-dark-600" />
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Estado Civil</label>
+						<select name="estado_civil" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all appearance-none">
+							<option value="">Seleccionar...</option>
+							<option value="Soltero/a" selected={ isSelected(p, "EstadoCivil", "Soltero/a") }>Soltero/a</option>
+							<option value="Casado/a" selected={ isSelected(p, "EstadoCivil", "Casado/a") }>Casado/a</option>
+							<option value="Divorciado/a" selected={ isSelected(p, "EstadoCivil", "Divorciado/a") }>Divorciado/a</option>
+							<option value="Viudo/a" selected={ isSelected(p, "EstadoCivil", "Viudo/a") }>Viudo/a</option>
+							<option value="Pareja de hecho" selected={ isSelected(p, "EstadoCivil", "Pareja de hecho") }>Pareja de hecho</option>
+						</select>
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Situación Laboral</label>
+						<select name="situacion_laboral" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all appearance-none">
+							<option value="">Seleccionar...</option>
+							<option value="Empleado" selected={ isSelected(p, "SituacionLaboral", "Empleado") }>Empleado/a</option>
+							<option value="Desempleado" selected={ isSelected(p, "SituacionLaboral", "Desempleado") }>Desempleado/a</option>
+							<option value="Estudiante" selected={ isSelected(p, "SituacionLaboral", "Estudiante") }>Estudiante</option>
+							<option value="Jubilado" selected={ isSelected(p, "SituacionLaboral", "Jubilado") }>Jubilado/a</option>
+							<option value="Incapacitado" selected={ isSelected(p, "SituacionLaboral", "Incapacitado") }>Incapacitado/a</option>
+						</select>
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Nivel de Estudios</label>
+						<input type="text" name="nivel_estudios" placeholder="Sin estudios, Primaria, Secundaria, Universitarios..."
+							value={ getValue(p, "NivelEstudios") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder:text-dark-600" />
+					</div>
+				</div>
+			</section>
+
+			<!-- 2. Historial de Ingreso -->
+			<section class="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+				<div class="bg-dark-800/50 px-6 py-4 border-b border-dark-800 flex items-center space-x-3">
+					<svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+					<h3 class="font-bold text-dark-100 uppercase tracking-wider text-sm">2. Detalles de Admisión</h3>
+				</div>
+				<div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Fecha de Ingreso</label>
+						<input type="text" name="fecha_ingreso" placeholder="dd/mm/aaaa"
+							value={ getDateValue(p, "FechaIngreso") }
+							pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}"
+							title="Formato requerido: dd/mm/aaaa"
+							oninput="this.value = this.value.replace(/[^0-9/]/g, '').replace(/^(\d{2})(\d{2})/, '$1/$2/').replace(/^(\d{2}\/\d{2})(\d{4})/, '$1/$2')"
+							maxlength="10"
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all" />
+					</div>
+					<div class="md:col-span-2 space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Derivado por / Referencia</label>
+						<input type="text" name="derivado_por" placeholder="Centro de salud, familia, orden judicial..."
+							value={ getValue(p, "DerivadoPor") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder:text-dark-600" />
+					</div>
+					<div class="md:col-span-3 space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Motivo Principal del Ingreso</label>
+						<textarea name="motivo_ingreso" rows="2" placeholder="Describa brevemente la situación que motiva el ingreso..."
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder:text-dark-600 resize-none">{ getValue(p, "MotivoIngreso") }</textarea>
+					</div>
+				</div>
+			</section>
+
+			<!-- 3. Consumo y Sustancias -->
+			<section class="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+				<div class="bg-dark-800/50 px-6 py-4 border-b border-dark-800 flex items-center space-x-3">
+					<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.691.346a6 6 0 01-3.86.517l-2.388-.477a2 2 0 00-1.022.547l-1.168 1.168a2 2 0 001.235 3.407l1.041.104a2 2 0 011.579 1.137l.452.903a2 2 0 003.578 0l.453-.903a2 2 0 011.578-1.137l1.041-.104a2 2 0 001.235-3.407l-1.168-1.168z"></path></svg>
+					<h3 class="font-bold text-dark-100 uppercase tracking-wider text-sm">3. Historial Toxicológico</h3>
+				</div>
+				<div class="p-6 space-y-6">
+					<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+						<div class="space-y-1">
+							<label class="text-xs font-bold text-dark-400 uppercase">Edad Inicio</label>
+							<input type="number" name="edad_inicio" placeholder="0"
+								value={ fmt.Sprintf("%d", getInt(p, "EdadInicioConsumo")) }
+								class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all" />
+						</div>
+						<div class="form-group md:col-span-2">
+						<label class="text-xs font-bold text-dark-400 uppercase">Sustancia Principal</label>
+						<select name="sustancia_principal" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all appearance-none">
+						<option value="">Seleccionar sustancia...</option>
+						for _, s := range sustancias {
+						<option value={ s.Nombre } selected={ getValue(p, "SustanciaPrincipal") == s.Nombre }>{ s.Nombre }</option>
+						}
+						</select>
+						</div>
+
+						<div class="space-y-1">
+							<label class="text-xs font-bold text-dark-400 uppercase">Frecuencia</label>
+							<select name="frecuencia" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all appearance-none">
+								<option value="">Seleccionar...</option>
+								<option value="Diario" selected={ getValue(p, "FrecuenciaConsumo") == "Diario" }>Diario</option>
+								<option value="Semanal" selected={ getValue(p, "FrecuenciaConsumo") == "Semanal" }>Semanal</option>
+								<option value="Ocasional" selected={ getValue(p, "FrecuenciaConsumo") == "Ocasional" }>Ocasional</option>
+							</select>
+						</div>
+					</div>
+
+					<div class="bg-dark-950/50 border border-dark-800 rounded-xl p-6 space-y-4">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<!-- Columna 1: Filtrado de lista existente -->
+						<div class="space-y-2">
+							<label class="text-xs font-bold text-dark-400 uppercase mb-2 block text-blue-400/80">Filtrar Sustancias Existentes</label>
+							<div class="relative">
+								<svg class="w-5 h-5 text-dark-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+								<input type="text" 
+									   name="search_filter"
+									   placeholder="Escriba para buscar en la lista..." 
+									   hx-post="/sustancias/search" 
+									   hx-trigger="keyup changed delay:300ms" 
+									   hx-target="#drug-list" 
+									   class="w-full bg-dark-900 border border-dark-700 rounded-lg pl-10 pr-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all" />
+							</div>
+						</div>
+
+						<!-- Columna 2: Añadir nueva sustancia (Manual) -->
+						<div class="space-y-2">
+							<label class="text-xs font-bold text-dark-400 uppercase mb-2 block text-emerald-400/80">Registrar Nueva Sustancia</label>
+							<div class="flex space-x-2">
+								<div class="relative flex-1">
+									<input type="text" 
+										   id="manual-drug-input"
+										   name="manual_name"
+										   placeholder="Nombre de la nueva sustancia..." 
+										   class="w-full bg-dark-900 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-dark-600" />
+								</div>
+								<button type="button" 
+										hx-post="/sustancias/manual" 
+										hx-include="#manual-drug-input"
+										hx-target="#selected-drugs" 
+										hx-swap="beforeend"
+										class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-900/20"
+										onclick="setTimeout(() => document.getElementById('manual-drug-input').value = '', 100)">
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+									<span>Añadir</span>
+								</button>
+							</div>
+						</div>
+					</div>
+
+						<div id="drug-list" class="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-4 bg-dark-900/50 border border-dark-800 rounded-lg custom-scrollbar">
+							@DrugList([]models.Sustancia{})
+						</div>
+
+						<div class="space-y-2">
+							<label class="text-xs font-bold text-dark-500 uppercase">Sustancias Incluidas en el Perfil:</label>
+							<div id="selected-drugs" class="min-h-[60px] p-3 bg-dark-900 border border-dark-800 rounded-lg flex flex-wrap gap-2">
+								if p != nil {
+									for _, s := range p.Sustancias {
+										@ManualDrug(s)
+									}
+								}
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- 4. Salud y Salud Mental -->
+			<section class="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+				<div class="bg-dark-800/50 px-6 py-4 border-b border-dark-800 flex items-center space-x-3">
+					<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04 escape-4.016 11.955 11.955 0 01-8.618 3.04M12 20.944a11.955 11.955 0 01-8.618-3.04m17.236 0a11.955 11.955 0 01-8.618 3.04"></path></svg>
+					<h3 class="font-bold text-dark-100 uppercase tracking-wider text-sm">4. Información Clínica y Salud</h3>
+				</div>
+				<div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Antecedentes Médicos</label>
+						<textarea name="ant_medicos" rows="3" placeholder="Enfermedades crónicas, hospitalizaciones previas..."
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all resize-none">{ getValue(p, "AntecedentesMedicos") }</textarea>
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Salud Mental / Psicopatología</label>
+						<textarea name="ant_psicologicos" rows="3" placeholder="Trastornos diagnosticados, historial psiquiátrico..."
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all resize-none">{ getValue(p, "AntecedentesPsicologicos") }</textarea>
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Alergias Conocidas</label>
+						<input type="text" name="alergias" placeholder="Medicamentos, alimentos, ambientales..."
+							value={ getValue(p, "Alergias") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all" />
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Medicación Farmacológica Actual</label>
+						<input type="text" name="medicacion" placeholder="Listado de fármacos y dosis..."
+							value={ getValue(p, "MedicacionActual") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all" />
+					</div>
+					<div class="space-y-1">
+						<label class="text-xs font-bold text-dark-400 uppercase">Tratamientos de Rehabilitación Previos</label>
+						<input type="text" name="trat_anteriores" placeholder="Centros, periodos, motivos de alta..."
+							value={ getValue(p, "TratamientosAnteriores") }
+							class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all" />
+					</div>
+				</div>
+			</section>
+
+			<!-- 5. Social y Legal -->
+			<section class="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden shadow-xl">
+				<div class="bg-dark-800/50 px-6 py-4 border-b border-dark-800 flex items-center space-x-3">
+					<svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+					<h3 class="font-bold text-dark-100 uppercase tracking-wider text-sm">5. Entorno Social y Legal</h3>
+				</div>
+				<div class="p-6 space-y-6">
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+						<div class="space-y-1">
+							<label class="text-xs font-bold text-dark-400 uppercase">Situación de Vivienda</label>
+							<input type="text" name="vivienda" placeholder="Propia, acogida, situación de calle..."
+								value={ getValue(p, "SituacionVivienda") }
+								class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all" />
+						</div>
+						<div class="md:col-span-2 space-y-1">
+							<label class="text-xs font-bold text-dark-400 uppercase">Asuntos Legales / Judiciales</label>
+							<input type="text" name="prob_legales" placeholder="Causas pendientes, antecedentes, libertad condicional..."
+								value={ getValue(p, "ProblemasLegales") }
+								class="w-full bg-dark-950 border border-dark-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all" />
+						</div>
+					</div>
+					
+					<div class="bg-dark-950/30 rounded-xl border border-dark-800 p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+						<div class="space-y-1">
+							<label class="text-[10px] font-bold text-dark-500 uppercase">Contacto Emergencia</label>
+							<input type="text" name="emergencia_nom" placeholder="Nombre completo"
+								value={ getValue(p, "ContactoEmergenciaNom") }
+								class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 outline-none" />
+						</div>
+						<div class="space-y-1">
+							<label class="text-[10px] font-bold text-dark-500 uppercase">Teléfono Emergencia</label>
+							<input type="tel" name="emergencia_tel" placeholder="Número directo"
+								value={ getValue(p, "ContactoEmergenciaTel") }
+								class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 outline-none" />
+						</div>
+						<div class="space-y-1">
+							<label class="text-[10px] font-bold text-dark-500 uppercase">Parentesco</label>
+							<input type="text" name="emergencia_parentesco" placeholder="Ej: Padre, Hermano..."
+								value={ getValue(p, "ParentescoEmergencia") }
+								class="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 outline-none" />
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Botón de Envío -->
+			<div class="flex flex-col items-center space-y-4 py-6">
+				<button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white px-12 py-4 rounded-xl font-black text-xl shadow-2xl shadow-blue-900/40 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-3 group">
+					<svg class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+					<span>FINALIZAR Y GENERAR EXPEDIENTE</span>
+				</button>
+				<p class="text-dark-500 text-sm flex items-center space-x-2">
+					<svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+					<span>Todos los datos se procesan de forma segura y confidencial.</span>
+				</p>
+			</div>
+		</form>
+
+		<div id="result" class="mt-8 transition-all duration-500">
+			<!-- Resultados dinámicos de HTMX -->
+		</div>
+	</div>
+}
+
+func getValue(p *models.Perfil, field string) string {
+	if p == nil {
+		return ""
+	}
+	switch field {
+	case "NombreCompleto": return p.NombreCompleto
+	case "DNI": return p.DNI
+	case "Direccion": return p.Direccion
+	case "Telefono": return p.Telefono
+	case "Email": return p.Email
+	case "EstadoCivil": return p.EstadoCivil
+	case "SituacionLaboral": return p.SituacionLaboral
+	case "NivelEstudios": return p.NivelEstudios
+	case "DerivadoPor": return p.DerivadoPor
+	case "MotivoIngreso": return p.MotivoIngreso
+	case "SustanciaPrincipal": return p.SustanciaPrincipal
+	case "FrecuenciaConsumo": return p.FrecuenciaConsumo
+	case "AntecedentesMedicos": return p.AntecedentesMedicos
+	case "AntecedentesPsicologicos": return p.AntecedentesPsicologicos
+	case "Alergias": return p.Alergias
+	case "MedicacionActual": return p.MedicacionActual
+	case "TratamientosAnteriores": return p.TratamientosAnteriores
+	case "SituacionVivienda": return p.SituacionVivienda
+	case "ProblemasLegales": return p.ProblemasLegales
+	case "ContactoEmergenciaNom": return p.ContactoEmergenciaNom
+	case "ContactoEmergenciaTel": return p.ContactoEmergenciaTel
+	case "ParentescoEmergencia": return p.ParentescoEmergencia
+	}
+	return ""
+}
+
+func getInt(p *models.Perfil, field string) int {
+	if p == nil {
+		return 0
+	}
+	switch field {
+	case "EdadInicioConsumo": return p.EdadInicioConsumo
+	}
+	return 0
+}
+
+func getDateValue(p *models.Perfil, field string) string {
+	if p == nil {
+		return ""
+	}
+	switch field {
+	case "FechaNacimiento": 
+		if p.FechaNacimiento.IsZero() { return "" }
+		return p.FechaNacimiento.Format("02/01/2006")
+	case "FechaIngreso":
+		if p.FechaIngreso.IsZero() { return "" }
+		return p.FechaIngreso.Format("02/01/2006")
+	}
+	return ""
+}
+
+func isSelected(p *models.Perfil, field string, value string) bool {
+	if p == nil {
+		return false
+	}
+	switch field {
+	case "EstadoCivil": return p.EstadoCivil == value
+	case "SituacionLaboral": return p.SituacionLaboral == value
+	}
+	return false
+}
+
+script toggleDrugTagScript(name string) {
+	toggleDrugTag(this, name)
+}
+
+templ DrugList(sustancias []models.Sustancia) {
+	if len(sustancias) == 0 {
+		<div class="col-span-full py-4 text-center text-dark-600 text-sm italic">
+			Sin resultados... use "Añadir Manual" si es necesario.
+		</div>
+	}
+	for _, s := range sustancias {
+		<div class="flex items-center space-x-3 p-2 bg-dark-800/40 hover:bg-dark-700/60 border border-dark-700/50 rounded-lg transition-colors group cursor-pointer" 
+             onclick="const cb = this.querySelector('input'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));">
+			<input type="checkbox" name="sustancias_ids" value={ s.ID } id={ "drug-" + s.ID } 
+                   class="w-4 h-4 rounded border-dark-600 bg-dark-950 text-blue-600 focus:ring-blue-500/50 transition-all pointer-events-none" 
+				   onchange={ toggleDrugTagScript(s.Nombre) } />
+			<label for={ "drug-" + s.ID } class="text-sm font-medium text-dark-300 cursor-pointer select-none group-hover:text-white transition-colors">{ s.Nombre }</label>
+		</div>
+	}
+	<script>
+		function toggleDrugTag(checkbox, name) {
+			const container = document.getElementById('selected-drugs');
+			const tagId = 'tag-' + checkbox.value;
+			
+			if (checkbox.checked) {
+				if (!document.getElementById(tagId)) {
+					const tag = document.createElement('div');
+					tag.id = tagId;
+					tag.className = 'inline-flex items-center bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg text-xs font-bold animate-in zoom-in duration-200';
+					tag.innerHTML = `
+						<span>${name}</span>
+						<button type="button" class="ml-2 text-blue-400/50 hover:text-blue-400 transition-colors" 
+                                onclick="document.getElementById('drug-${checkbox.value}').checked = false; document.getElementById('${tagId}').remove();">
+							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+						</button>
+					`;
+					container.appendChild(tag);
+				}
+			} else {
+				const tag = document.getElementById(tagId);
+				if (tag) tag.remove();
+			}
+		}
+	</script>
+}
+
+templ ManualDrug(s models.Sustancia) {
+	<div id={ "tag-" + s.ID } class="inline-flex items-center bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-bold animate-in zoom-in duration-200">
+		<span>{ s.Nombre } (M)</span>
+		<input type="hidden" name="sustancias_ids" value={ s.ID } />
+		<button type="button" class="ml-2 text-emerald-400/50 hover:text-emerald-400 transition-colors" onclick="this.parentElement.remove()">
+			<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+		</button>
+	</div>
+}
+
+templ Result(perfilID string, success bool, message string) {
+	if success {
+		<div class="bg-blue-500/10 border border-blue-500/30 p-8 rounded-2xl shadow-2xl shadow-blue-900/20 text-center space-y-6 animate-in slide-in-from-bottom duration-500">
+			<div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-blue-600/30">
+				<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+			</div>
+			<div class="space-y-2">
+				<h4 class="text-2xl font-black text-white">Expediente Generado Correctamente</h4>
+				<p class="text-dark-400">{ message }</p>
+			</div>
+			<div class="pt-4">
+				<a href={ templ.SafeURL("/pdf/" + perfilID) } target="_blank" 
+                   class="inline-flex items-center space-x-3 bg-white text-dark-950 px-8 py-4 rounded-xl font-black hover:bg-dark-100 transition-all transform hover:-translate-y-1 active:scale-95 shadow-xl shadow-white/5">
+					<svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A1 1 0 0113 2.707l3.293 3.293A1 1 0 0117 6.707V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>
+					<span>DESCARGAR INFORME CLÍNICO (PDF)</span>
+				</a>
+			</div>
+		</div>
+	} else {
+		<div class="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl text-center space-y-4 animate-in shake duration-500">
+			<div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto">
+				<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+			</div>
+			<div class="space-y-1">
+				<h4 class="font-bold text-white text-lg">Error en el Proceso</h4>
+				<p class="text-red-400">{ message }</p>
+			</div>
+		</div>
+	}
+}

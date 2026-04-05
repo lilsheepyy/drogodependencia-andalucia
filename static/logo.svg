@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fondo redondeado con gradiente -->
+    <rect width="512" height="512" rx="128" fill="url(#paint0_linear)"/>
+    
+    <!-- Sombra sutil del documento -->
+    <path d="M160 120H320L380 180V420C380 431.046 371.046 440 360 440H160C148.954 440 140 431.046 140 420V140C140 128.954 148.954 120 160 120Z" fill="black" fill-opacity="0.1"/>
+    
+    <!-- Documento principal -->
+    <path d="M150 110H310L370 170V410C370 421.046 361.046 430 350 430H150C138.954 430 130 421.046 130 410V130C130 118.954 138.954 110 150 110Z" fill="white"/>
+    
+    <!-- Plegado de la esquina -->
+    <path d="M310 110V170H370L310 110Z" fill="#E2E8F0"/>
+    
+    <!-- Icono de Usuario dentro del documento -->
+    <circle cx="250" cy="230" r="45" fill="#3B82F6"/>
+    <path d="M180 340C180 301.34 211.34 270 250 270C288.66 270 320 301.34 320 340V350H180V340Z" fill="#3B82F6"/>
+    
+    <!-- Líneas de datos -->
+    <rect x="170" y="380" width="160" height="8" rx="4" fill="#CBD5E1"/>
+    <rect x="170" y="400" width="100" height="8" rx="4" fill="#CBD5E1"/>
+    
+    <!-- Cruz médica decorativa en la esquina -->
+    <rect x="340" y="340" width="80" height="80" rx="20" fill="#EF4444" stroke="white" stroke-width="10"/>
+    <rect x="375" y="355" width="10" height="50" rx="5" fill="white"/>
+    <rect x="355" y="375" width="50" height="10" rx="5" fill="white"/>
+
+    <defs>
+        <linearGradient id="paint0_linear" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#2563EB"/>
+            <stop offset="1" stop-color="#1E40AF"/>
+        </linearGradient>
+    </defs>
+</svg>
