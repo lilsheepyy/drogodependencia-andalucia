@@ -4,6 +4,9 @@
 
 Este proyecto es una aplicación web moderna y eficiente desarrollada en Go para la gestión integral de expedientes clínicos en centros de tratamiento de drogodependencia, diseñada con una estética profesional y funcional.
 
+<img width="1865" height="963" alt="imagen" src="https://github.com/user-attachments/assets/e734cc9a-8731-43a5-9e58-6b76cb4f60a9" />
+
+
 ## Características Principales
 
 - **Gestión de Pacientes:** Búsqueda rápida por DNI o Pasaporte para generar nuevos informes sobre pacientes existentes.
